@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { traficoZonas, TraficoZona } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, MapPin } from 'lucide-react';
@@ -37,11 +37,12 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
   };
 
   // Auto-select zone if only one is filtered
-  useEffect(() => {
-    if (filteredZonas.length === 1 && selectedZone?.zona !== filteredZonas[0].zona) {
-      setSelectedZone(filteredZonas[0]);
-    }
-  }, [filteredZonas, selectedZone]);
+  // Auto-select logic disabled for stability
+  // useEffect(() => {
+  //   if (filteredZonas.length === 1 && selectedZone?.zona !== filteredZonas[0].zona) {
+  //     setSelectedZone(filteredZonas[0]);
+  //   }
+  // }, [filteredZonas, selectedZone]);
 
   // Use Memo for auto-select was REMOVED because it causes render loops
 
