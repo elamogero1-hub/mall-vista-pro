@@ -13,12 +13,12 @@ interface OperationalViewProps {
 
 const OperationalView = ({ filters }: OperationalViewProps) => {
   const isFiltered = filters.zona !== 'todas';
-  
+
   // Filtrar zonas según el filtro
   const filteredZonas = useMemo(() => {
     if (filters.zona === 'todas') return traficoZonas;
     // Mapear zona filtrada a zonas de tráfico
-    return traficoZonas.filter(z => 
+    return traficoZonas.filter(z =>
       z.zona.toLowerCase().includes(filters.zona.split(' - ')[0].toLowerCase())
     );
   }, [filters.zona]);
@@ -27,11 +27,11 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
   const zonasSaturadas = filteredZonas.filter(z => z.densidad > 0.8).length;
   const zonasNormales = filteredZonas.filter(z => z.densidad >= 0.4 && z.densidad <= 0.8).length;
   const zonasBajas = filteredZonas.filter(z => z.densidad < 0.4).length;
-  
-  const permanenciaPromedio = filteredZonas.length > 0 
-    ? filteredZonas.reduce((sum, z) => sum + z.permanenciaPromedio, 0) / filteredZonas.length 
+
+  const permanenciaPromedio = filteredZonas.length > 0
+    ? filteredZonas.reduce((sum, z) => sum + z.permanenciaPromedio, 0) / filteredZonas.length
     : 0;
-  
+
   // Filtrar tráfico por hora según zona
   const filteredTrafico = useMemo(() => {
     if (!isFiltered) return traficoPorHora;
@@ -43,7 +43,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
     }));
   }, [isFiltered, filteredZonas.length]);
 
-  const traficoMaximo = Math.max(...filteredTrafico.map(t => t.trafico));
+  const traficoMaximo = filteredTrafico.length > 0 ? Math.max(...filteredTrafico.map(t => t.trafico)) : 0;
   const horasPico = filteredTrafico.filter(t => t.trafico > traficoMaximo * 0.8).length;
 
   return (
@@ -53,7 +53,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
         <div className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary flex items-center gap-2">
           <span>🗺️</span>
           <span>
-            Mostrando datos operativos de <strong>{filteredZonas.length}</strong> zona{filteredZonas.length !== 1 ? 's' : ''} 
+            Mostrando datos operativos de <strong>{filteredZonas.length}</strong> zona{filteredZonas.length !== 1 ? 's' : ''}
             {filters.zona !== 'todas' && ` en ${filters.zona}`}
           </span>
         </div>
@@ -69,7 +69,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
           <p className="text-2xl font-bold text-destructive">{zonasSaturadas}</p>
           <p className="text-xs text-muted-foreground mt-1">Densidad &gt;80%</p>
         </div>
-        
+
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Zonas Normales</span>
@@ -78,7 +78,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
           <p className="text-2xl font-bold text-success">{zonasNormales}</p>
           <p className="text-xs text-muted-foreground mt-1">Densidad 40-80%</p>
         </div>
-        
+
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Permanencia Prom.</span>
@@ -87,7 +87,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
           <p className="text-2xl font-bold text-foreground">{permanenciaPromedio.toFixed(0)}</p>
           <p className="text-xs text-muted-foreground mt-1">minutos</p>
         </div>
-        
+
         <div className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Horas Pico</span>
@@ -103,10 +103,10 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
         <div className="lg:col-span-2">
           <HeatmapChart filters={filters} />
         </div>
-        
+
         <div className="space-y-6">
           <TrafficHourlyChart filters={filters} />
-          
+
           {/* Recommendations */}
           <div className="glass-card p-4">
             <h4 className="text-sm font-semibold text-foreground mb-3">Recomendaciones Operativas</h4>
@@ -122,7 +122,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex items-start gap-3 p-2 rounded-lg bg-warning/10 border border-warning/20">
                 <Clock className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                 <div>
@@ -132,7 +132,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
                   </p>
                 </div>
               </div>
-              
+
               {zonasBajas > 0 && (
                 <div className="flex items-start gap-3 p-2 rounded-lg bg-primary/10 border border-primary/20">
                   <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -172,7 +172,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
                 ))}
             </div>
           </div>
-          
+
           <div className="p-4 rounded-xl bg-warning/10 border border-warning/20">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-warning">Media Densidad (40-80%)</span>
@@ -190,7 +190,7 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
                 ))}
             </div>
           </div>
-          
+
           <div className="p-4 rounded-xl bg-success/10 border border-success/20">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-success">Baja Densidad (&lt;40%)</span>

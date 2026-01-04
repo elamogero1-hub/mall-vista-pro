@@ -21,24 +21,24 @@ const TrafficHourlyChart = ({ filters }: TrafficHourlyChartProps) => {
   // Filtrar y ajustar datos según zona
   const data = useMemo(() => {
     if (!isFiltered) return traficoPorHora;
-    
+
     // Calcular factor de reducción basado en zonas filtradas
-    const filteredZonas = traficoZonas.filter(z => 
+    const filteredZonas = traficoZonas.filter(z =>
       z.zona.toLowerCase().includes(filters.zona.split(' - ')[0].toLowerCase()) ||
       filters.zona.toLowerCase().includes(z.zona.split(' ')[0].toLowerCase())
     );
     const factor = filteredZonas.length / traficoZonas.length;
-    
+
     return traficoPorHora.map(t => ({
       ...t,
       trafico: Math.round(t.trafico * factor * (0.85 + Math.random() * 0.3))
     }));
   }, [filters.zona, isFiltered]);
 
-  // Encontrar hora pico
-  const peakHour = data.reduce((max, current) => 
+  // Encontrar hora pico (protegido contra arrays vacíos)
+  const peakHour = data.length > 0 ? data.reduce((max, current) =>
     current.trafico > max.trafico ? current : max
-  );
+    , data[0]) : { hora: '00:00', trafico: 0 };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -85,9 +85,9 @@ const TrafficHourlyChart = ({ filters }: TrafficHourlyChartProps) => {
                 <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
               vertical={false}
             />
             <XAxis
