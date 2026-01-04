@@ -15,6 +15,7 @@ const Index = () => {
     dateRange: undefined,
     categoria: 'todas',
     zona: 'todas',
+    tienda: 'todas',
     periodoRapido: 'mes-actual',
   });
 
@@ -22,20 +23,19 @@ const Index = () => {
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    // Aquí se aplicarían los filtros a los datos
     console.log('Filtros aplicados:', newFilters);
   };
 
   const renderView = () => {
     switch (currentView) {
       case 'financiero':
-        return <FinancialView />;
+        return <FinancialView filters={filters} />;
       case 'eficiencia':
-        return <EfficiencyView />;
+        return <EfficiencyView filters={filters} />;
       case 'operativo':
-        return <OperationalView />;
+        return <OperationalView filters={filters} />;
       default:
-        return <FinancialView />;
+        return <FinancialView filters={filters} />;
     }
   };
 

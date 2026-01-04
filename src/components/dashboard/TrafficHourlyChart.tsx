@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -7,10 +8,32 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { traficoPorHora, formatNumber } from '@/data/mockData';
+import { traficoPorHora, formatNumber, traficoZonas } from '@/data/mockData';
+import { FilterState } from './FilterHeader';
 
-const TrafficHourlyChart = () => {
-  const data = traficoPorHora;
+interface TrafficHourlyChartProps {
+  filters: FilterState;
+}
+
+const TrafficHourlyChart = ({ filters }: TrafficHourlyChartProps) => {
+  const isFiltered = filters.zona !== 'todas';
+
+  // Filtrar y ajustar datos según zona
+  const data = useMemo(() => {
+    if (!isFiltered) return traficoPorHora;
+    
+    // Calcular factor de reducción basado en zonas filtradas
+    const filteredZonas = traficoZonas.filter(z => 
+      z.zona.toLowerCase().includes(filters.zona.split(' - ')[0].toLowerCase()) ||
+      filters.zona.toLowerCase().includes(z.zona.split(' ')[0].toLowerCase())
+    );
+    const factor = filteredZonas.length / traficoZonas.length;
+    
+    return traficoPorHora.map(t => ({
+      ...t,
+      trafico: Math.round(t.trafico * factor * (0.85 + Math.random() * 0.3))
+    }));
+  }, [filters.zona, isFiltered]);
 
   // Encontrar hora pico
   const peakHour = data.reduce((max, current) => 
@@ -43,7 +66,9 @@ const TrafficHourlyChart = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Tráfico por Hora</h3>
-          <p className="text-sm text-muted-foreground">Patrón de afluencia del día típico</p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? 'Patrón filtrado por zona' : 'Patrón de afluencia del día típico'}
+          </p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warning/10 border border-warning/20">
           <span className="text-xs text-warning font-medium">Hora Pico: {peakHour.hora}</span>
@@ -55,7 +80,7 @@ const TrafficHourlyChart = () => {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
-              <linearGradient id="colorTrafico" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorTraficoHourly" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
               </linearGradient>
@@ -83,8 +108,8 @@ const TrafficHourlyChart = () => {
               dataKey="trafico"
               stroke="hsl(var(--chart-3))"
               strokeWidth={2}
-              fill="url(#colorTrafico)"
-              animationDuration={1000}
+              fill="url(#colorTraficoHourly)"
+              animationDuration={500}
             />
           </AreaChart>
         </ResponsiveContainer>

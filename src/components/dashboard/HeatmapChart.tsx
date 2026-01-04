@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { traficoZonas, TraficoZona } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, MapPin } from 'lucide-react';
+import { FilterState } from './FilterHeader';
 
-const HeatmapChart = () => {
+interface HeatmapChartProps {
+  filters: FilterState;
+}
+
+const HeatmapChart = ({ filters }: HeatmapChartProps) => {
   const [selectedZone, setSelectedZone] = useState<TraficoZona | null>(null);
+
+  const isFiltered = filters.zona !== 'todas';
+
+  // Filtrar zonas según el filtro
+  const filteredZonas = useMemo(() => {
+    if (filters.zona === 'todas') return traficoZonas;
+    return traficoZonas.filter(z => 
+      z.zona.toLowerCase().includes(filters.zona.split(' - ')[0].toLowerCase()) ||
+      filters.zona.toLowerCase().includes(z.zona.split(' ')[0].toLowerCase())
+    );
+  }, [filters.zona]);
 
   const getDensityColor = (density: number) => {
     if (density > 0.8) return 'from-red-500/80 to-orange-500/80';
@@ -20,12 +36,21 @@ const HeatmapChart = () => {
     return { label: 'Bajo', color: 'bg-green-500/20 text-green-400' };
   };
 
+  // Auto-select zone if only one is filtered
+  useMemo(() => {
+    if (filteredZonas.length === 1 && selectedZone?.zona !== filteredZonas[0].zona) {
+      setSelectedZone(filteredZonas[0]);
+    }
+  }, [filteredZonas, selectedZone]);
+
   return (
     <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Mapa de Calor - Tráfico</h3>
-          <p className="text-sm text-muted-foreground">Densidad de visitantes por zona</p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? `Mostrando ${filteredZonas.length} zona(s)` : 'Densidad de visitantes por zona'}
+          </p>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">Densidad:</span>
@@ -79,40 +104,43 @@ const HeatmapChart = () => {
 
             {/* Heatmap points */}
             {traficoZonas.map((zona, index) => {
+              const isInFilter = filteredZonas.some(fz => fz.zona === zona.zona);
               const size = 12 + zona.densidad * 20;
-              const densityInfo = getDensityLabel(zona.densidad);
               
               return (
                 <div
                   key={index}
-                  className={`absolute cursor-pointer transition-all duration-300 rounded-full bg-gradient-to-br ${getDensityColor(zona.densidad)} blur-sm hover:blur-none`}
+                  className={`absolute cursor-pointer transition-all duration-300 rounded-full bg-gradient-to-br ${getDensityColor(zona.densidad)} ${isInFilter ? 'blur-sm hover:blur-none' : 'blur-md opacity-20'}`}
                   style={{
                     left: `${zona.x}%`,
                     top: `${zona.y}%`,
                     width: `${size}%`,
                     height: `${size * 0.75}%`,
                     transform: 'translate(-50%, -50%)',
-                    opacity: selectedZone?.zona === zona.zona ? 1 : 0.7,
+                    opacity: !isInFilter ? 0.15 : selectedZone?.zona === zona.zona ? 1 : 0.7,
                   }}
-                  onClick={() => setSelectedZone(zona)}
+                  onClick={() => isInFilter && setSelectedZone(zona)}
                 />
               );
             })}
 
             {/* Zone labels */}
-            {traficoZonas.map((zona, index) => (
-              <div
-                key={`label-${index}`}
-                className="absolute text-[10px] font-medium text-foreground/80 pointer-events-none"
-                style={{
-                  left: `${zona.x}%`,
-                  top: `${zona.y + 8}%`,
-                  transform: 'translateX(-50%)',
-                }}
-              >
-                {zona.zona.length > 15 ? zona.zona.slice(0, 12) + '...' : zona.zona}
-              </div>
-            ))}
+            {traficoZonas.map((zona, index) => {
+              const isInFilter = filteredZonas.some(fz => fz.zona === zona.zona);
+              return (
+                <div
+                  key={`label-${index}`}
+                  className={`absolute text-[10px] font-medium pointer-events-none transition-opacity ${isInFilter ? 'text-foreground/80' : 'text-foreground/20'}`}
+                  style={{
+                    left: `${zona.x}%`,
+                    top: `${zona.y + 8}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  {zona.zona.length > 15 ? zona.zona.slice(0, 12) + '...' : zona.zona}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -179,7 +207,7 @@ const HeatmapChart = () => {
             <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Alertas de Capacidad
             </h4>
-            {traficoZonas
+            {filteredZonas
               .filter(z => z.densidad > 0.8)
               .slice(0, 3)
               .map((zona, i) => (
@@ -193,6 +221,9 @@ const HeatmapChart = () => {
                   </Badge>
                 </div>
               ))}
+            {filteredZonas.filter(z => z.densidad > 0.8).length === 0 && (
+              <p className="text-xs text-muted-foreground p-2">No hay zonas saturadas</p>
+            )}
           </div>
         </div>
       </div>

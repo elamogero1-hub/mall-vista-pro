@@ -11,30 +11,48 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { FilterState } from './FilterHeader';
 
 type SortKey = keyof Tienda;
 type SortDirection = 'asc' | 'desc' | null;
 
-const StoresTable = () => {
+interface StoresTableProps {
+  filters: FilterState;
+}
+
+const StoresTable = ({ filters }: StoresTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('ventas');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  // Promedios para benchmark
+  // Filtrar tiendas según los filtros globales
+  const globalFilteredTiendas = useMemo(() => {
+    return tiendas.filter(t => {
+      const matchCategoria = filters.categoria === 'todas' || t.categoria.toLowerCase() === filters.categoria;
+      const matchZona = filters.zona === 'todas' || t.zona.toLowerCase() === filters.zona;
+      const matchTienda = filters.tienda === 'todas' || t.nombre.toLowerCase() === filters.tienda;
+      return matchCategoria && matchZona && matchTienda;
+    });
+  }, [filters]);
+
+  // Promedios para benchmark (basados en tiendas filtradas)
   const avgVentaPorM2 = useMemo(() => {
-    const filtered = tiendas.filter(t => t.ventas > 0);
+    const filtered = globalFilteredTiendas.filter(t => t.ventas > 0);
+    if (filtered.length === 0) return 0;
     return filtered.reduce((sum, t) => sum + (t.ventas / t.m2), 0) / filtered.length;
-  }, []);
+  }, [globalFilteredTiendas]);
 
   const avgConversion = useMemo(() => {
-    const filtered = tiendas.filter(t => t.ventas > 0);
+    const filtered = globalFilteredTiendas.filter(t => t.ventas > 0);
+    if (filtered.length === 0) return 0;
     return filtered.reduce((sum, t) => sum + t.conversion, 0) / filtered.length;
-  }, []);
+  }, [globalFilteredTiendas]);
 
   const avgIndice = useMemo(() => {
-    const filtered = tiendas.filter(t => t.ventas > 0);
+    const filtered = globalFilteredTiendas.filter(t => t.ventas > 0);
+    if (filtered.length === 0) return 0;
     return filtered.reduce((sum, t) => sum + t.indiceAtraccion, 0) / filtered.length;
-  }, []);
+  }, [globalFilteredTiendas]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -57,7 +75,8 @@ const StoresTable = () => {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let data = tiendas.filter(t => 
+    // Aplicar búsqueda local
+    let data = globalFilteredTiendas.filter(t => 
       t.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.zona.toLowerCase().includes(searchTerm.toLowerCase())
@@ -83,9 +102,10 @@ const StoresTable = () => {
     }
 
     return data;
-  }, [searchTerm, sortKey, sortDirection]);
+  }, [globalFilteredTiendas, searchTerm, sortKey, sortDirection]);
 
   const getBenchmarkBadge = (value: number, avg: number, type: 'high-good' | 'low-good' = 'high-good') => {
+    if (avg === 0) return null;
     const ratio = value / avg;
     const isGood = type === 'high-good' ? ratio > 1 : ratio < 1;
     const isBad = type === 'high-good' ? ratio < 0.8 : ratio > 1.2;
@@ -125,12 +145,16 @@ const StoresTable = () => {
     'Servicios': 'bg-muted text-muted-foreground',
   };
 
+  const isFiltered = filters.categoria !== 'todas' || filters.zona !== 'todas' || filters.tienda !== 'todas';
+
   return (
     <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Benchmark por Tienda</h3>
-          <p className="text-sm text-muted-foreground">Comparativa vs. promedio del mall</p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? `${globalFilteredTiendas.length} tienda(s) filtrada(s)` : 'Comparativa vs. promedio del mall'}
+          </p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -196,54 +220,62 @@ const StoresTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedData.map((tienda) => {
-              const ventaPorM2 = tienda.ventas / tienda.m2;
-              return (
-                <TableRow 
-                  key={tienda.id} 
-                  className="border-border/30 hover:bg-secondary/30 transition-colors"
-                >
-                  <TableCell className="font-medium text-foreground">
-                    {tienda.nombre}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="secondary" 
-                      className={`${categoryColors[tienda.categoria] || 'bg-muted text-muted-foreground'} border-0 text-[10px]`}
-                    >
-                      {tienda.categoria}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(tienda.ventas)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-sm">S/{ventaPorM2.toFixed(0)}</span>
-                      {getBenchmarkBadge(ventaPorM2, avgVentaPorM2)}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-sm">{tienda.conversion.toFixed(1)}%</span>
-                      {getBenchmarkBadge(tienda.conversion, avgConversion)}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-sm">{tienda.indiceAtraccion.toFixed(2)}</span>
-                      {getBenchmarkBadge(tienda.indiceAtraccion, avgIndice)}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filteredAndSortedData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No hay tiendas que coincidan con los filtros
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredAndSortedData.map((tienda) => {
+                const ventaPorM2 = tienda.ventas / tienda.m2;
+                return (
+                  <TableRow 
+                    key={tienda.id} 
+                    className="border-border/30 hover:bg-secondary/30 transition-colors"
+                  >
+                    <TableCell className="font-medium text-foreground">
+                      {tienda.nombre}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="secondary" 
+                        className={`${categoryColors[tienda.categoria] || 'bg-muted text-muted-foreground'} border-0 text-[10px]`}
+                      >
+                        {tienda.categoria}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(tienda.ventas)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-sm">S/{ventaPorM2.toFixed(0)}</span>
+                        {getBenchmarkBadge(ventaPorM2, avgVentaPorM2)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-sm">{tienda.conversion.toFixed(1)}%</span>
+                        {getBenchmarkBadge(tienda.conversion, avgConversion)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-sm">{tienda.indiceAtraccion.toFixed(2)}</span>
+                        {getBenchmarkBadge(tienda.indiceAtraccion, avgIndice)}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50 text-xs text-muted-foreground">
-        <span>Mostrando {filteredAndSortedData.length} de {tiendas.length} tiendas</span>
+        <span>Mostrando {filteredAndSortedData.length} de {globalFilteredTiendas.length} tiendas</span>
         <div className="flex items-center gap-4">
           <span>Promedio Venta/m²: S/{avgVentaPorM2.toFixed(0)}</span>
           <span>Promedio Conversión: {avgConversion.toFixed(1)}%</span>

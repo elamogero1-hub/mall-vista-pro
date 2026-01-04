@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -8,14 +9,42 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { ventasMensuales, formatCurrency, formatNumber } from '@/data/mockData';
+import { ventasMensuales, formatCurrency, formatNumber, tiendas } from '@/data/mockData';
+import { FilterState } from './FilterHeader';
 
-const SalesChart = () => {
-  const data = ventasMensuales.map((item) => ({
-    ...item,
-    ventasM: item.ventas / 1000000,
-    metaM: item.meta / 1000000,
-  }));
+interface SalesChartProps {
+  filters: FilterState;
+}
+
+const SalesChart = ({ filters }: SalesChartProps) => {
+  const isFiltered = filters.categoria !== 'todas' || filters.zona !== 'todas' || filters.tienda !== 'todas';
+  
+  // Calcular proporción basada en filtros
+  const filteredTiendas = useMemo(() => {
+    return tiendas.filter(t => {
+      const matchCategoria = filters.categoria === 'todas' || t.categoria.toLowerCase() === filters.categoria;
+      const matchZona = filters.zona === 'todas' || t.zona.toLowerCase() === filters.zona;
+      const matchTienda = filters.tienda === 'todas' || t.nombre.toLowerCase() === filters.tienda;
+      return matchCategoria && matchZona && matchTienda;
+    });
+  }, [filters]);
+
+  const proporcion = filteredTiendas.length / tiendas.length;
+
+  const data = useMemo(() => {
+    return ventasMensuales.map((item, idx) => {
+      // Aplicar proporción a los datos con variación mensual
+      const variacion = 0.9 + Math.random() * 0.2; // Variación del 90% al 110%
+      return {
+        ...item,
+        ventas: Math.round(item.ventas * proporcion * variacion),
+        meta: Math.round(item.meta * proporcion),
+        visitantes: Math.round(item.visitantes * proporcion * variacion),
+        ventasM: (item.ventas * proporcion * variacion) / 1000000,
+        metaM: (item.meta * proporcion) / 1000000,
+      };
+    });
+  }, [proporcion]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -56,7 +85,9 @@ const SalesChart = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Evolución de Ventas</h3>
-          <p className="text-sm text-muted-foreground">Últimos 12 meses vs. meta</p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? `Filtrado: ${filteredTiendas.length} tienda(s)` : 'Últimos 12 meses vs. meta'}
+          </p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
@@ -95,7 +126,7 @@ const SalesChart = () => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-              tickFormatter={(value) => `S/${value}M`}
+              tickFormatter={(value) => `S/${value.toFixed(1)}M`}
               domain={[0, 'auto']}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -111,7 +142,7 @@ const SalesChart = () => {
               stroke="hsl(var(--primary))"
               strokeWidth={2}
               fill="url(#colorVentas)"
-              animationDuration={1000}
+              animationDuration={500}
             />
           </AreaChart>
         </ResponsiveContainer>

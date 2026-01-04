@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -9,17 +10,13 @@ import {
   Cell,
 } from 'recharts';
 import { tiendas, formatCurrency } from '@/data/mockData';
+import { FilterState } from './FilterHeader';
 
-const TopStoresChart = () => {
-  const data = [...tiendas]
-    .sort((a, b) => b.ventas - a.ventas)
-    .slice(0, 10)
-    .map((tienda) => ({
-      nombre: tienda.nombre,
-      ventas: tienda.ventas,
-      categoria: tienda.categoria,
-    }));
+interface TopStoresChartProps {
+  filters: FilterState;
+}
 
+const TopStoresChart = ({ filters }: TopStoresChartProps) => {
   const categoryColors: Record<string, string> = {
     'Moda': 'hsl(var(--primary))',
     'Restaurantes': 'hsl(var(--warning))',
@@ -30,6 +27,28 @@ const TopStoresChart = () => {
     'Deportes': 'hsl(var(--chart-1))',
     'Servicios': 'hsl(var(--muted-foreground))',
   };
+
+  const data = useMemo(() => {
+    // Filtrar tiendas
+    let filtered = tiendas.filter(t => {
+      const matchCategoria = filters.categoria === 'todas' || t.categoria.toLowerCase() === filters.categoria;
+      const matchZona = filters.zona === 'todas' || t.zona.toLowerCase() === filters.zona;
+      const matchTienda = filters.tienda === 'todas' || t.nombre.toLowerCase() === filters.tienda;
+      return matchCategoria && matchZona && matchTienda;
+    });
+
+    // Ordenar y tomar top 10
+    return [...filtered]
+      .sort((a, b) => b.ventas - a.ventas)
+      .slice(0, 10)
+      .map((tienda) => ({
+        nombre: tienda.nombre,
+        ventas: tienda.ventas,
+        categoria: tienda.categoria,
+      }));
+  }, [filters]);
+
+  const isFiltered = filters.categoria !== 'todas' || filters.zona !== 'todas' || filters.tienda !== 'todas';
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -61,12 +80,24 @@ const TopStoresChart = () => {
     return null;
   };
 
+  if (data.length === 0) {
+    return (
+      <div className="glass-card p-6 flex items-center justify-center h-[400px]">
+        <p className="text-muted-foreground">No hay tiendas que coincidan con los filtros seleccionados</p>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Top 10 Tiendas</h3>
-          <p className="text-sm text-muted-foreground">Por facturación mensual</p>
+          <h3 className="text-lg font-semibold text-foreground">
+            {isFiltered ? `Top ${Math.min(data.length, 10)} Tiendas Filtradas` : 'Top 10 Tiendas'}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? `${data.length} tienda(s) encontrada(s)` : 'Por facturación mensual'}
+          </p>
         </div>
       </div>
 
@@ -101,7 +132,7 @@ const TopStoresChart = () => {
             <Bar 
               dataKey="ventas" 
               radius={[0, 4, 4, 0]}
-              animationDuration={800}
+              animationDuration={500}
             >
               {data.map((entry, index) => (
                 <Cell 
