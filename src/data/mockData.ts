@@ -166,10 +166,10 @@ export const kpis = {
     meta: 2400000,
     historico: [185, 172, 195, 188, 215, 198, 245, 212, 205, 228, 248, 320],
   } as KPIData,
-  ventaPorM2: {
-    valor: 8250,
-    cambio: 6.2,
-    historico: [7200, 7400, 7650, 7800, 8100, 8000, 8350, 8150, 8050, 8280, 8400, 8520],
+  ajusteRentaVariable: {
+    valor: 4958500, // approx 5% of 99,170,000
+    cambio: 12.5, // Follows sales trend
+    historico: [340000, 320000, 355000, 349000, 412000, 384000, 472000, 406000, 394000, 432000, 464000, 622000], // roughly 5% of existing sales history trend if simple division, but here just illustrative scale up
   } as KPIData,
   ratioConversion: {
     valor: 12.8,

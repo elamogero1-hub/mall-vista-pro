@@ -29,7 +29,7 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
         ticketPromedio: 0,
         ventasPorVisitante: 0,
         traficoTotal: 0,
-        ventaPorM2: 0,
+        ajusteRentaVariable: 0,
         ratioConversion: 0,
         cumplimientoMeta: 0,
       };
@@ -40,7 +40,8 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
     const m2Total = filteredTiendas.reduce((sum, t) => sum + t.m2, 0);
     const ticketPromedio = filteredTiendas.reduce((sum, t) => sum + t.ticketPromedio, 0) / filteredTiendas.length;
     const ventasPorVisitante = traficoTotal > 0 ? ventasTotales / traficoTotal : 0;
-    const ventaPorM2 = m2Total > 0 ? ventasTotales / m2Total : 0;
+    // Cálculo: 5% de las ventas totales
+    const ajusteRentaVariable = ventasTotales * 0.05;
     const ratioConversion = filteredTiendas.reduce((sum, t) => sum + t.conversion, 0) / filteredTiendas.length;
 
     // Meta proporcional
@@ -54,7 +55,7 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
       ticketPromedio,
       ventasPorVisitante,
       traficoTotal,
-      ventaPorM2,
+      ajusteRentaVariable,
       ratioConversion,
       cumplimientoMeta,
     };
@@ -154,12 +155,12 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
           variant="compact"
         />
         <KPICard
-          title="Venta por m²"
-          value={`S/ ${formatNumber(dynamicKPIs.ventaPorM2)}`}
-          change={isFiltered ? Number((Math.random() * 8 - 1).toFixed(1)) : kpis.ventaPorM2.cambio}
-          trend={dynamicKPIs.ventaPorM2 > 0 ? "up" : "neutral"}
-          sparkline={kpis.ventaPorM2.historico}
-          tooltip="Ventas Totales ÷ Metros Cuadrados Alquilados. Mide eficiencia del espacio."
+          title="Ajuste de Renta Variable"
+          value={formatCurrency(dynamicKPIs.ajusteRentaVariable)}
+          change={isFiltered ? Number((Math.random() * 8 - 1).toFixed(1)) : kpis.ajusteRentaVariable.cambio}
+          trend={dynamicKPIs.ajusteRentaVariable > 0 ? "up" : "neutral"}
+          sparkline={kpis.ajusteRentaVariable.historico}
+          tooltip="Variación estimada de renta según ventas (Calculado al 5% de Ventas Totales)"
           variant="compact"
         />
         <KPICard
