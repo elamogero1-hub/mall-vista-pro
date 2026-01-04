@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { traficoZonas, TraficoZona } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, MapPin } from 'lucide-react';
@@ -16,7 +16,7 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
   // Filtrar zonas según el filtro
   const filteredZonas = useMemo(() => {
     if (filters.zona === 'todas') return traficoZonas;
-    return traficoZonas.filter(z => 
+    return traficoZonas.filter(z =>
       z.zona.toLowerCase().includes(filters.zona.split(' - ')[0].toLowerCase()) ||
       filters.zona.toLowerCase().includes(z.zona.split(' ')[0].toLowerCase())
     );
@@ -37,11 +37,13 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
   };
 
   // Auto-select zone if only one is filtered
-  useMemo(() => {
+  useEffect(() => {
     if (filteredZonas.length === 1 && selectedZone?.zona !== filteredZonas[0].zona) {
       setSelectedZone(filteredZonas[0]);
     }
   }, [filteredZonas, selectedZone]);
+
+  // Use Memo for auto-select was REMOVED because it causes render loops
 
   return (
     <div className="glass-card p-6">
@@ -82,21 +84,21 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
               <svg viewBox="0 0 100 100" className="w-full h-full">
                 {/* Outer walls */}
                 <rect x="5" y="5" width="90" height="90" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-muted-foreground" />
-                
+
                 {/* Floor divisions */}
                 <line x1="5" y1="33" x2="95" y2="33" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2" className="text-muted-foreground/50" />
                 <line x1="5" y1="66" x2="95" y2="66" stroke="currentColor" strokeWidth="0.3" strokeDasharray="2" className="text-muted-foreground/50" />
-                
+
                 {/* Central corridor */}
                 <rect x="40" y="5" width="20" height="90" fill="none" stroke="currentColor" strokeWidth="0.2" className="text-muted-foreground/30" />
-                
+
                 {/* Anchor stores */}
                 <rect x="5" y="30" width="20" height="25" fill="none" stroke="currentColor" strokeWidth="0.3" className="text-muted-foreground/40" />
                 <rect x="75" y="30" width="20" height="25" fill="none" stroke="currentColor" strokeWidth="0.3" className="text-muted-foreground/40" />
-                
+
                 {/* Food Court area */}
                 <rect x="25" y="10" width="50" height="20" fill="none" stroke="currentColor" strokeWidth="0.3" className="text-muted-foreground/40" />
-                
+
                 {/* Entrance */}
                 <rect x="40" y="85" width="20" height="10" fill="none" stroke="currentColor" strokeWidth="0.4" className="text-primary/50" />
               </svg>
@@ -106,7 +108,7 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
             {traficoZonas.map((zona, index) => {
               const isInFilter = filteredZonas.some(fz => fz.zona === zona.zona);
               const size = 12 + zona.densidad * 20;
-              
+
               return (
                 <div
                   key={index}
@@ -150,7 +152,7 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
             <h4 className="text-sm font-medium text-foreground mb-3">
               {selectedZone ? selectedZone.zona : 'Selecciona una zona'}
             </h4>
-            
+
             {selectedZone ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -162,7 +164,7 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
                     {(selectedZone.densidad * 100).toFixed(0)}%
                   </Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-primary" />
@@ -172,7 +174,7 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
                     {selectedZone.permanenciaPromedio.toFixed(1)} min
                   </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-primary" />
@@ -185,13 +187,13 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
 
                 <div className="pt-3 border-t border-border/30">
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    {selectedZone.densidad > 0.8 
+                    {selectedZone.densidad > 0.8
                       ? 'Zona de alta afluencia. Considerar refuerzo de personal de limpieza y seguridad.'
                       : selectedZone.densidad > 0.6
-                      ? 'Flujo moderado-alto. Zona ideal para publicidad premium.'
-                      : selectedZone.densidad > 0.4
-                      ? 'Tráfico regular. Potencial para activaciones de marca.'
-                      : 'Zona de bajo tráfico. Evaluar estrategias de atracción.'}
+                        ? 'Flujo moderado-alto. Zona ideal para publicidad premium.'
+                        : selectedZone.densidad > 0.4
+                          ? 'Tráfico regular. Potencial para activaciones de marca.'
+                          : 'Zona de bajo tráfico. Evaluar estrategias de atracción.'}
                   </p>
                 </div>
               </div>
@@ -211,8 +213,8 @@ const HeatmapChart = ({ filters }: HeatmapChartProps) => {
               .filter(z => z.densidad > 0.8)
               .slice(0, 3)
               .map((zona, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="flex items-center justify-between p-2 rounded-lg bg-destructive/10 border border-destructive/20"
                 >
                   <span className="text-xs text-foreground">{zona.zona}</span>
