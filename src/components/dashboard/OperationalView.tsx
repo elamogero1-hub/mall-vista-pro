@@ -101,11 +101,17 @@ const OperationalView = ({ filters }: OperationalViewProps) => {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <HeatmapChart filters={filters} />
+          {/* <HeatmapChart filters={filters} /> */}
+          <div className="glass-card p-6 flex items-center justify-center min-h-[400px]">
+            <p className="text-muted-foreground">Mapa desactivado temporalmente para diagnóstico</p>
+          </div>
         </div>
 
         <div className="space-y-6">
-          <TrafficHourlyChart filters={filters} />
+          {/* <TrafficHourlyChart filters={filters} /> */}
+          <div className="glass-card p-6 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground">Gráfico desactivado temporalmente</p>
+          </div>
 
           {/* Recommendations */}
           <div className="glass-card p-4">
