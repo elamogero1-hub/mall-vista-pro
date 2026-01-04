@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Filter, X, ChevronDown } from 'lucide-react';
+import { Calendar, Filter, X, ChevronDown, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { categorias, zonas } from '@/data/mockData';
+import { categorias, zonas, tiendas } from '@/data/mockData';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
@@ -28,6 +28,7 @@ export interface FilterState {
   dateRange: DateRange | undefined;
   categoria: string;
   zona: string;
+  tienda: string;
   periodoRapido: string;
 }
 
@@ -38,7 +39,15 @@ const FilterHeader = ({ onFilterChange }: FilterHeaderProps) => {
   });
   const [categoria, setCategoria] = useState<string>('todas');
   const [zona, setZona] = useState<string>('todas');
+  const [tienda, setTienda] = useState<string>('todas');
   const [periodoRapido, setPeriodoRapido] = useState<string>('mes-actual');
+
+  // Filtrar tiendas según categoría y zona seleccionadas
+  const filteredTiendas = tiendas.filter(t => {
+    const matchCategoria = categoria === 'todas' || t.categoria.toLowerCase() === categoria;
+    const matchZona = zona === 'todas' || t.zona.toLowerCase() === zona;
+    return matchCategoria && matchZona;
+  });
 
   const handlePeriodoRapido = (periodo: string) => {
     setPeriodoRapido(periodo);
@@ -65,23 +74,36 @@ const FilterHeader = ({ onFilterChange }: FilterHeaderProps) => {
     }
     
     setDateRange(newRange);
-    onFilterChange({ dateRange: newRange, categoria, zona, periodoRapido: periodo });
+    onFilterChange({ dateRange: newRange, categoria, zona, tienda, periodoRapido: periodo });
   };
 
   const handleCategoriaChange = (value: string) => {
     setCategoria(value);
-    onFilterChange({ dateRange, categoria: value, zona, periodoRapido });
+    // Resetear tienda si ya no está en la categoría
+    const newTienda = value === 'todas' ? tienda : 
+      filteredTiendas.some(t => t.nombre.toLowerCase() === tienda) ? tienda : 'todas';
+    setTienda(newTienda);
+    onFilterChange({ dateRange, categoria: value, zona, tienda: newTienda, periodoRapido });
   };
 
   const handleZonaChange = (value: string) => {
     setZona(value);
-    onFilterChange({ dateRange, categoria, zona: value, periodoRapido });
+    // Resetear tienda si ya no está en la zona
+    const newTienda = value === 'todas' ? tienda :
+      filteredTiendas.some(t => t.nombre.toLowerCase() === tienda) ? tienda : 'todas';
+    setTienda(newTienda);
+    onFilterChange({ dateRange, categoria, zona: value, tienda: newTienda, periodoRapido });
+  };
+
+  const handleTiendaChange = (value: string) => {
+    setTienda(value);
+    onFilterChange({ dateRange, categoria, zona, tienda: value, periodoRapido });
   };
 
   const handleDateChange = (range: DateRange | undefined) => {
     setDateRange(range);
     setPeriodoRapido('personalizado');
-    onFilterChange({ dateRange: range, categoria, zona, periodoRapido: 'personalizado' });
+    onFilterChange({ dateRange: range, categoria, zona, tienda, periodoRapido: 'personalizado' });
   };
 
   const limpiarFiltros = () => {
@@ -89,13 +111,15 @@ const FilterHeader = ({ onFilterChange }: FilterHeaderProps) => {
     setDateRange(defaultRange);
     setCategoria('todas');
     setZona('todas');
+    setTienda('todas');
     setPeriodoRapido('mes-actual');
-    onFilterChange({ dateRange: defaultRange, categoria: 'todas', zona: 'todas', periodoRapido: 'mes-actual' });
+    onFilterChange({ dateRange: defaultRange, categoria: 'todas', zona: 'todas', tienda: 'todas', periodoRapido: 'mes-actual' });
   };
 
   const activeFiltersCount = [
     categoria !== 'todas' ? 1 : 0,
     zona !== 'todas' ? 1 : 0,
+    tienda !== 'todas' ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
   return (
@@ -186,6 +210,22 @@ const FilterHeader = ({ onFilterChange }: FilterHeaderProps) => {
             {zonas.map((z) => (
               <SelectItem key={z} value={z.toLowerCase()}>
                 {z}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Tienda */}
+        <Select value={tienda} onValueChange={handleTiendaChange}>
+          <SelectTrigger className="w-[180px] h-9 bg-secondary/50 border-border/50">
+            <Store className="w-4 h-4 mr-2 text-muted-foreground" />
+            <SelectValue placeholder="Tienda" />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border max-h-[300px]">
+            <SelectItem value="todas">Todas las tiendas</SelectItem>
+            {filteredTiendas.map((t) => (
+              <SelectItem key={t.id} value={t.nombre.toLowerCase()}>
+                {t.nombre}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ScatterChart,
   Scatter,
@@ -13,8 +13,13 @@ import {
 } from 'recharts';
 import { tiendas, formatCurrency, formatNumber } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
+import { FilterState } from './FilterHeader';
 
-const EfficiencyScatterChart = () => {
+interface EfficiencyScatterChartProps {
+  filters: FilterState;
+}
+
+const EfficiencyScatterChart = ({ filters }: EfficiencyScatterChartProps) => {
   const [hoveredStore, setHoveredStore] = useState<string | null>(null);
 
   const categoryColors: Record<string, string> = {
@@ -28,17 +33,27 @@ const EfficiencyScatterChart = () => {
     'Servicios': 'hsl(var(--muted-foreground))',
   };
 
-  const data = tiendas
-    .filter(t => t.ventas > 0)
-    .map((tienda) => ({
-      ...tienda,
-      ventasK: tienda.ventas / 1000,
-      traficoK: tienda.trafico / 1000,
-    }));
+  const data = useMemo(() => {
+    return tiendas
+      .filter(t => {
+        if (t.ventas <= 0) return false;
+        const matchCategoria = filters.categoria === 'todas' || t.categoria.toLowerCase() === filters.categoria;
+        const matchZona = filters.zona === 'todas' || t.zona.toLowerCase() === filters.zona;
+        const matchTienda = filters.tienda === 'todas' || t.nombre.toLowerCase() === filters.tienda;
+        return matchCategoria && matchZona && matchTienda;
+      })
+      .map((tienda) => ({
+        ...tienda,
+        ventasK: tienda.ventas / 1000,
+        traficoK: tienda.trafico / 1000,
+      }));
+  }, [filters]);
+
+  const isFiltered = filters.categoria !== 'todas' || filters.zona !== 'todas' || filters.tienda !== 'todas';
 
   // Calcular promedios para las líneas de referencia
-  const avgTrafico = data.reduce((sum, t) => sum + t.trafico, 0) / data.length;
-  const avgVentas = data.reduce((sum, t) => sum + t.ventas, 0) / data.length;
+  const avgTrafico = data.length > 0 ? data.reduce((sum, t) => sum + t.trafico, 0) / data.length : 0;
+  const avgVentas = data.length > 0 ? data.reduce((sum, t) => sum + t.ventas, 0) / data.length : 0;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -93,12 +108,22 @@ const EfficiencyScatterChart = () => {
     return null;
   };
 
+  if (data.length === 0) {
+    return (
+      <div className="glass-card p-6 flex items-center justify-center h-[450px]">
+        <p className="text-muted-foreground">No hay tiendas que coincidan con los filtros seleccionados</p>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Matriz Tráfico vs Ventas</h3>
-          <p className="text-sm text-muted-foreground">Identificación de tiendas Ancla e Ineficientes</p>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered ? `${data.length} tienda(s) filtrada(s)` : 'Identificación de tiendas Ancla e Ineficientes'}
+          </p>
         </div>
       </div>
 
@@ -179,7 +204,7 @@ const EfficiencyScatterChart = () => {
             <Scatter 
               name="Tiendas" 
               data={data}
-              animationDuration={800}
+              animationDuration={500}
             >
               {data.map((entry, index) => (
                 <Cell 
