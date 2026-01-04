@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import FilterHeader, { FilterState } from '@/components/dashboard/FilterHeader';
-import FinancialView from '@/components/dashboard/FinancialView';
-import EfficiencyView from '@/components/dashboard/EfficiencyView';
-import OperationalView from '@/components/dashboard/OperationalView';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Loader2 } from 'lucide-react';
+
+const FinancialView = lazy(() => import('@/components/dashboard/FinancialView'));
+const EfficiencyView = lazy(() => import('@/components/dashboard/EfficiencyView'));
+const OperationalView = lazy(() => import('@/components/dashboard/OperationalView'));
 
 type ViewType = 'financiero' | 'eficiencia' | 'operativo';
 
@@ -43,18 +45,27 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent pointer-events-none" />
-      
+
       <div className="relative container mx-auto px-4 py-6 max-w-[1600px]">
-        <DashboardHeader 
+        <DashboardHeader
           currentView={currentView}
           onViewChange={setCurrentView}
           lastUpdate={lastUpdate}
         />
-        
+
         <FilterHeader onFilterChange={handleFilterChange} />
-        
+
         <main>
-          {renderView()}
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground text-sm">Cargando visualización...</p>
+              </div>
+            </div>
+          }>
+            {renderView()}
+          </Suspense>
         </main>
 
         {/* Footer */}
