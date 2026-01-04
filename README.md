@@ -60,6 +60,17 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Deployment on Vercel
+
+To deploy this project on Vercel:
+
+1. Create a [Vercel account](https://vercel.com/signup).
+2. Install the Vercel CLI: `npm i -g vercel`
+3. Run `vercel` in the project root and follow the prompts.
+4. For subsequent deployments, run `vercel --prod`.
+
+Alternatively, you can connect your GitHub repository to Vercel for automatic deployments on push.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
