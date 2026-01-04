@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import KPICard from './KPICard';
 import EfficiencyScatterChart from './EfficiencyScatterChart';
 import StoresTable from './StoresTable';
-import { kpis, formatNumber, tiendas } from '@/data/mockData';
+import { kpis, formatNumber, formatCurrency, tiendas } from '@/data/mockData';
 import { FilterState } from './FilterHeader';
 
 interface EfficiencyViewProps {
@@ -33,10 +33,10 @@ const EfficiencyView = ({ filters }: EfficiencyViewProps) => {
   const tiendaStats = useMemo(() => {
     const avgTrafico = filteredTiendas.reduce((sum, t) => sum + t.trafico, 0) / (filteredTiendas.length || 1);
     const avgVentas = filteredTiendas.reduce((sum, t) => sum + t.ventas, 0) / (filteredTiendas.length || 1);
-    
+
     const anclas = filteredTiendas.filter(t => t.trafico > avgTrafico && t.ventas > avgVentas).length;
     const ineficientes = filteredTiendas.filter(t => t.trafico > avgTrafico && t.ventas < avgVentas).length;
-    
+
     return { anclas, ineficientes, total: filteredTiendas.length };
   }, [filteredTiendas]);
 
@@ -44,7 +44,7 @@ const EfficiencyView = ({ filters }: EfficiencyViewProps) => {
   const dynamicKPIs = useMemo(() => {
     if (filteredTiendas.length === 0) {
       return {
-        ventaPorM2: 0,
+        ajusteRentaVariable: 0,
         ratioConversion: 0,
         traficoTotal: 0,
       };
@@ -56,7 +56,7 @@ const EfficiencyView = ({ filters }: EfficiencyViewProps) => {
     const ratioConversion = filteredTiendas.reduce((sum, t) => sum + t.conversion, 0) / filteredTiendas.length;
 
     return {
-      ventaPorM2: m2Total > 0 ? ventasTotales / m2Total : 0,
+      ajusteRentaVariable: ventasTotales * 0.05,
       ratioConversion,
       traficoTotal,
     };
@@ -69,7 +69,7 @@ const EfficiencyView = ({ filters }: EfficiencyViewProps) => {
         <div className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary flex items-center gap-2">
           <span>📊</span>
           <span>
-            Analizando <strong>{filteredTiendas.length}</strong> tienda{filteredTiendas.length !== 1 ? 's' : ''} 
+            Analizando <strong>{filteredTiendas.length}</strong> tienda{filteredTiendas.length !== 1 ? 's' : ''}
             {filters.categoria !== 'todas' && ` en ${filters.categoria}`}
             {filters.zona !== 'todas' && ` - ${filters.zona}`}
             {filters.tienda !== 'todas' && ` (${filters.tienda})`}
@@ -80,12 +80,12 @@ const EfficiencyView = ({ filters }: EfficiencyViewProps) => {
       {/* KPIs Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KPICard
-          title="Venta por m²"
-          value={`S/ ${formatNumber(dynamicKPIs.ventaPorM2)}`}
-          change={isFiltered ? Number((Math.random() * 10 - 2).toFixed(1)) : kpis.ventaPorM2.cambio}
-          trend={dynamicKPIs.ventaPorM2 > 0 ? "up" : "neutral"}
-          sparkline={kpis.ventaPorM2.historico}
-          tooltip="Ventas Totales ÷ Metros Cuadrados Alquilados. Benchmark del sector: S/ 7,500/m²"
+          title="Ajuste Renta Variable"
+          value={formatCurrency(dynamicKPIs.ajusteRentaVariable)}
+          change={isFiltered ? Number((Math.random() * 10 - 2).toFixed(1)) : kpis.ajusteRentaVariable.cambio}
+          trend={dynamicKPIs.ajusteRentaVariable > 0 ? "up" : "neutral"}
+          sparkline={kpis.ajusteRentaVariable.historico}
+          tooltip="Variación estimada de renta según ventas (Calculado al 5% de Ventas Totales)"
         />
         <KPICard
           title="Ratio de Conversión"
