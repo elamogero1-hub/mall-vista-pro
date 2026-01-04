@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import KPICard from './KPICard';
 import SalesChart from './SalesChart';
 import TopStoresChart from './TopStoresChart';
+import TopZonesChart from './TopZonesChart';
 import { kpis, formatCurrency, formatNumber, tiendas, ventasMensuales } from '@/data/mockData';
 import { FilterState } from './FilterHeader';
 
@@ -75,7 +76,7 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
         <div className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary flex items-center gap-2">
           <span>📊</span>
           <span>
-            Mostrando datos de <strong>{filteredTiendas.length}</strong> tienda{filteredTiendas.length !== 1 ? 's' : ''} 
+            Mostrando datos de <strong>{filteredTiendas.length}</strong> tienda{filteredTiendas.length !== 1 ? 's' : ''}
             {filters.categoria !== 'todas' && ` en ${filters.categoria}`}
             {filters.zona !== 'todas' && ` - ${filters.zona}`}
             {filters.tienda !== 'todas' && ` (${filters.tienda})`}
@@ -120,10 +121,15 @@ const FinancialView = ({ filters }: FinancialViewProps) => {
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Sales Chart Row */}
+      <div className="grid grid-cols-1 gap-6">
         <SalesChart filters={filters} />
+      </div>
+
+      {/* Top Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopStoresChart filters={filters} />
+        <TopZonesChart filters={filters} />
       </div>
 
       {/* Secondary KPIs */}

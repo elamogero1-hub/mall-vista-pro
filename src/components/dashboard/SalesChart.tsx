@@ -18,7 +18,7 @@ interface SalesChartProps {
 
 const SalesChart = ({ filters }: SalesChartProps) => {
   const isFiltered = filters.categoria !== 'todas' || filters.zona !== 'todas' || filters.tienda !== 'todas';
-  
+
   // Calcular proporción basada en filtros
   const filteredTiendas = useMemo(() => {
     return tiendas.filter(t => {
@@ -32,7 +32,33 @@ const SalesChart = ({ filters }: SalesChartProps) => {
   const proporcion = filteredTiendas.length / tiendas.length;
 
   const data = useMemo(() => {
-    return ventasMensuales.map((item, idx) => {
+    // Filtrar por fechas si existe rango
+    let filteredVentasMensuales = [...ventasMensuales];
+
+    if (filters.dateRange?.from && filters.dateRange?.to) {
+      const from = filters.dateRange.from;
+      const to = filters.dateRange.to;
+
+      // Mapeo básico de nombres de meses en español a índices o fechas
+      // Dado que mockData tiene strings como 'Ene 2025', haremos un filtrado simple
+      // Convirtiendo el string del mes a fecha real para comparar
+      const monthMap: Record<string, number> = {
+        'Ene': 0, 'Feb': 1, 'Mar': 2, 'Abr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Ago': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dic': 11
+      };
+
+      filteredVentasMensuales = ventasMensuales.filter(item => {
+        const [mesStr, anioStr] = item.mes.split(' ');
+        const itemDate = new Date(parseInt(anioStr), monthMap[mesStr], 1);
+
+        // Comparar mes y año
+        // Normalizamos las fechas de filtro al primer día del mes para comparación justa si es por mes
+        // O usamos timestamps para rango completo
+        return itemDate >= from && itemDate <= to;
+      });
+    }
+
+    return filteredVentasMensuales.map((item, idx) => {
       // Aplicar proporción a los datos con variación mensual
       const variacion = 0.9 + Math.random() * 0.2; // Variación del 90% al 110%
       return {
@@ -44,7 +70,7 @@ const SalesChart = ({ filters }: SalesChartProps) => {
         metaM: (item.meta * proporcion) / 1000000,
       };
     });
-  }, [proporcion]);
+  }, [proporcion, filters.dateRange]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -110,9 +136,9 @@ const SalesChart = ({ filters }: SalesChartProps) => {
                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
               vertical={false}
             />
             <XAxis
