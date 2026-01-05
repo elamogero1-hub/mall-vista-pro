@@ -20,9 +20,9 @@ const MarketingStoresTable = ({ filters }: MarketingStoresTableProps) => {
   // Filtrar tiendas según los filtros globales
   const filteredStores = useMemo(() => {
     return tiendasMarketing.filter(t => {
-      const matchCategoria = filters.categoria === 'todas' || t.categoria.toLowerCase() === filters.categoria;
-      const matchZona = filters.zona === 'todas' || t.zona.toLowerCase() === filters.zona;
-      const matchTienda = filters.tienda === 'todas' || t.nombre.toLowerCase() === filters.tienda;
+      const matchCategoria = filters.categoria === 'todas' || (t.categoria && t.categoria.toLowerCase() === filters.categoria.toLowerCase());
+      const matchZona = filters.zona === 'todas' || (t.zona && t.zona.toLowerCase() === filters.zona.toLowerCase());
+      const matchTienda = filters.tienda === 'todas' || (t.nombre && t.nombre.toLowerCase() === filters.tienda.toLowerCase());
       return matchCategoria && matchZona && matchTienda;
     });
   }, [filters]);

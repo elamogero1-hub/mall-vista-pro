@@ -1,5 +1,7 @@
 
-import { KPIData, tiendas } from './mockData';
+import { KPIData, tiendas, formatCurrency } from './mockData';
+
+export { formatCurrency };
 
 export interface AtribucionDiaria {
   fecha: string;
@@ -30,6 +32,12 @@ export const kpisMarketing = {
     cambio: 2.1,
     meta: 8.0,
     historico: [7.2, 7.5, 7.8, 8.0, 8.2, 8.1, 8.3, 8.4, 8.5, 8.2, 8.4, 8.5]
+  } as KPIData,
+  visitasDigitales: {
+    valor: 145200,
+    cambio: 12.5,
+    meta: 130000,
+    historico: [120000, 125000, 128000, 130000, 135000, 138000, 140000, 142000, 143000, 144000, 145000, 145200]
   } as KPIData,
   indiceAtraccionDigital: {
     valor: 1.45,
