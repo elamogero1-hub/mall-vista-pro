@@ -13,7 +13,15 @@ import {
 import { atribucionTemporal, formatCurrency } from '@/data/marketingData';
 
 const MarketingAttributionChart = () => {
-  const data = atribucionTemporal;
+  const data = atribucionTemporal || [];
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="glass-card p-6 animate-fade-in flex items-center justify-center h-[400px]">
+        <p className="text-muted-foreground">No hay datos de atribución disponibles</p>
+      </div>
+    );
+  }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

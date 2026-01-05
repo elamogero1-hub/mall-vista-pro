@@ -7,8 +7,10 @@ import { es } from 'date-fns/locale';
 import FinancialView from '@/components/dashboard/FinancialView';
 import EfficiencyView from '@/components/dashboard/EfficiencyView';
 import OperationalView from '@/components/dashboard/OperationalView';
+import MarketingView from '@/components/dashboard/MarketingView';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-type ViewType = 'financiero' | 'eficiencia' | 'operativo';
+type ViewType = 'financiero' | 'eficiencia' | 'operativo' | 'marketing';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>('financiero');
@@ -36,7 +38,11 @@ const Index = () => {
       case 'operativo':
         return <OperationalView filters={filters} />;
       case 'marketing':
-        return <MarketingView filters={filters} />;
+        return (
+          <ErrorBoundary>
+            <MarketingView filters={filters} />
+          </ErrorBoundary>
+        );
       default:
         return <FinancialView filters={filters} />;
     }

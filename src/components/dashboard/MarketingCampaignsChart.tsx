@@ -13,7 +13,15 @@ import { topCampanas, formatCurrency } from '@/data/marketingData';
 
 const MarketingCampaignsChart = () => {
   // Sort by ROI descending
-  const data = [...topCampanas].sort((a, b) => a.roi - b.roi); // Recharts renders bottom-up for vertical list usually? Or we use layout="vertical"
+  const data = topCampanas ? [...topCampanas].sort((a, b) => a.roi - b.roi) : []; 
+
+  if (!data || data.length === 0) {
+     return (
+       <div className="glass-card p-6 animate-fade-in h-full flex items-center justify-center">
+         <p className="text-muted-foreground">No hay datos de campañas disponibles</p>
+       </div>
+     );
+  }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
