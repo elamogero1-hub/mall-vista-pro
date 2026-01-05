@@ -35,6 +35,8 @@ const Index = () => {
         return <EfficiencyView filters={filters} />;
       case 'operativo':
         return <OperationalView filters={filters} />;
+      case 'marketing':
+        return <MarketingView filters={filters} />;
       default:
         return <FinancialView filters={filters} />;
     }

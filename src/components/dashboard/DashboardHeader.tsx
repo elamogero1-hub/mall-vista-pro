@@ -1,7 +1,7 @@
-import { LayoutDashboard, TrendingUp, Map, RefreshCw, Download } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Map, RefreshCw, Download, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-type ViewType = 'financiero' | 'eficiencia' | 'operativo';
+type ViewType = 'financiero' | 'eficiencia' | 'operativo' | 'marketing';
 
 interface DashboardHeaderProps {
   currentView: ViewType;
@@ -14,6 +14,7 @@ const DashboardHeader = ({ currentView, onViewChange, lastUpdate }: DashboardHea
     { id: 'financiero' as ViewType, label: 'Monitor Financiero', icon: LayoutDashboard },
     { id: 'eficiencia' as ViewType, label: 'Eficiencia Comercial', icon: TrendingUp },
     { id: 'operativo' as ViewType, label: 'Control Operativo', icon: Map },
+    { id: 'marketing' as ViewType, label: 'Atribución de Marketing', icon: Share2 },
   ];
 
   return (
