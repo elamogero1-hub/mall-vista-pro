@@ -32,7 +32,7 @@ const MarketingView = ({ filters }: MarketingViewProps) => {
         
         <KPICard
           title="Índice de Atracción Digital"
-          value={kpisMarketing.indiceAtraccionDigital.toFixed(2)}
+          value={kpisMarketing.indiceAtraccionDigital.valor.toFixed(2)}
           change={kpisMarketing.indiceAtraccionDigital.cambio}
           trend="up"
           benchmark={kpisMarketing.indiceAtraccionDigital.meta}
